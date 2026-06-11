@@ -28,6 +28,10 @@ auto-detects ffmpeg even if it isn't on your PATH: it checks PATH first,
 and if not found, searches `%LOCALAPPDATA%\Microsoft\WinGet\Packages` for
 `ffmpeg.exe` (where winget installs it) and passes it to yt-dlp directly.
 No manual PATH setup needed.
+Install ffmpeg (recommended):
+```
+winget install ffmpeg
+```
 
 ## Run
 
@@ -66,6 +70,9 @@ python3 src/sub_extraction/srt_to_text.py video.vtt
 # merge lines into readable paragraphs, or keep [hh:mm:ss] timestamps
 python3 src/sub_extraction/srt_to_text.py video.vtt --paragraphs
 python3 src/sub_extraction/srt_to_text.py video.vtt --timestamps
+
+example: 
+python src/sub_extraction/extract_subtitles.py --filter-text "Bodhicaryāvatāra,A Guide to the Bodhisattva's Way of Life,Shantideva's Guide to the Bodhisattva's Way of Life,Shantideva's Engaging in the Bodhisattva's Deeds,Shantideva - Way of the Bodhisattva,Bodhicharyavatara" --limit 30
 ```
 
 ## Options
