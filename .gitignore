@@ -25,6 +25,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.venv/
 MANIFEST
 
 # PyInstaller
@@ -127,3 +128,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Pipeline outputs
+bodhicitta_subtitles/
+report.csv
+.github/

@@ -1,148 +1,107 @@
-# README
-
-> **Note:** This readme template is based on one from the [Good Docs Project](https://thegooddocsproject.dev). You can find it and a guide to filling it out [here](https://gitlab.com/tgdp/templates/-/tree/main/readme). (_Erase this note after filling out the readme._)
-
 <h1 align="center">
   <br>
   <a href="https://openpecha.org"><img src="https://avatars.githubusercontent.com/u/82142807?s=400&u=19e108a15566f3a1449bafb03b8dd706a72aebcd&v=4" alt="OpenPecha" width="150"></a>
   <br>
 </h1>
 
-## _Project Name_
-_The project name should match its code's capability so that new users can easily understand what it does._
+# Bodhicitta Multimedia Library — Subtitle Extractor
 
-## Owner(s)
+Extracts subtitles for all ~1,361 videos catalogued at
+https://bodhicitta.tsadra.org/index.php/Library/Multimedia
 
-_Change to the owner(s) of the new repo. (This template's owners are:)_
-- [@ngawangtrinley](https://github.com/ngawangtrinley)
-- [@mikkokotila](https://github.com/mikkokotila)
-- [@evanyerburgh](https://github.com/evanyerburgh)
+The videos are hosted on YouTube (a few on Vimeo); the scripts find them via
+the site's MediaWiki API and pull their captions with yt-dlp.
 
+## Setup
 
-## Table of contents
-<p align="center">
-  <a href="#project-description">Project description</a> •
-  <a href="#who-this-project-is-for">Who this project is for</a> •
-  <a href="#project-dependencies">Project dependencies</a> •
-  <a href="#instructions-for-use">Instructions for use</a> •
-  <a href="#contributing-guidelines">Contributing guidelines</a> •
-  <a href="#additional-documentation">Additional documentation</a> •
-  <a href="#how-to-get-help">How to get help</a> •
-  <a href="#terms-of-use">Terms of use</a>
-</p>
-<hr>
+```bash
+pip install requests yt-dlp
+```
 
-## Project description
-_Use one of these:_
+ffmpeg is recommended (so yt-dlp can convert downloaded subtitles to
+`.srt`), but not required: if ffmpeg is missing, subtitles are still saved
+in their original WebVTT (`.vtt`) format and `srt_to_text.py` reads `.vtt`
+directly.
 
-With _Project Name_ you can _verb_ _noun_...
+On Windows, install it with `winget install ffmpeg`. The script
+auto-detects ffmpeg even if it isn't on your PATH: it checks PATH first,
+and if not found, searches `%LOCALAPPDATA%\Microsoft\WinGet\Packages` for
+`ffmpeg.exe` (where winget installs it) and passes it to yt-dlp directly.
+No manual PATH setup needed.
 
-_Project Name_ helps you _verb_ _noun_...
+## Run
 
+```bash
+# Recommended: test on 10 pages first
+python3 src/sub_extraction/extract_subtitles.py --limit 10
 
-## Who this project is for
-This project is intended for _target user_ who wants to _user objective_.
+# Full run (resumable — re-running skips completed videos)
+python3 src/sub_extraction/extract_subtitles.py
+```
 
+## Output (in ./bodhicitta_subtitles/)
 
-## Project dependencies
-Before using _Project Name_, ensure you have:
-* python _version_
-* _Prerequisite 2_
-* _Prerequisite 3..._
+- `manifest.csv` / `manifest.json` — every catalog page and its video URL
+- `srt/<video_id>/` — subtitle files: `.srt` if ffmpeg was available,
+  otherwise `.vtt`, one per language track
+- `txt/<video_id>/` — clean plain-text transcripts converted from the
+  subtitles (timestamps, tags, and rolling auto-caption duplicates removed)
+- `done.log` — completed videos (used for resuming)
+- `failures.log` — videos where subtitle download failed (private, deleted,
+  region-locked, or no captions)
 
+## Cleaning subtitles to text (srt_to_text.py)
 
-## Instructions for use
-Get started with _Project Name_ by _(write the first step a user needs to start using the project. Use a verb to start.)_.
+`extract_subtitles.py` runs this automatically as Stage 4, but it can also be
+run on its own — e.g. to (re)convert subtitles, including .srt files from
+other sources:
 
+```bash
+# whole folder (.srt and .vtt; "-orig" duplicates are skipped automatically)
+python3 src/sub_extraction/srt_to_text.py bodhicitta_subtitles/srt -o bodhicitta_subtitles/txt
 
-### Install _Project Name_
-1. _Write the step here._ 
+# single file
+python3 src/sub_extraction/srt_to_text.py video.vtt
 
-    _Explanatory text here_ 
-    
-    _(Optional: Include a code sample or screenshot that helps your users complete this step.)_
+# merge lines into readable paragraphs, or keep [hh:mm:ss] timestamps
+python3 src/sub_extraction/srt_to_text.py video.vtt --paragraphs
+python3 src/sub_extraction/srt_to_text.py video.vtt --timestamps
+```
 
-2. _Write the step here._
- 
-    a. _Substep 1_ 
-    
-    b. _Substep 2_
+## Options
 
+- `--stage manifest|download|convert|all` — run a single stage
+- `--langs "en.*"` — which subtitle language(s) to download (default:
+  English only, covering en, en-US, en-GB and auto-generated English).
+  Applies to both manual and auto-generated tracks. Examples:
+  `--langs "en.*,bo.*"` for English + Tibetan, `--langs all` for everything.
+- `--sleep 2` — delay between videos; raise it if YouTube starts throttling
 
-### Configure _Project Name_
-1. _Write the step here._
-2. _Write the step here._
+## Notes
 
+- The script downloads English subtitles only by default: manually-uploaded
+  English tracks when available, otherwise YouTube's auto-generated English
+  captions. Tibetan-language videos usually have neither, so they end up in
+  failures.log or with empty folders — those would need speech-to-text
+  (e.g. Whisper) as a separate step.
+- A full run of 1,361 videos at a 2 s delay takes roughly 1.5–3 hours.
 
-### Run _Project Name_
-1. _Write the step here._
-2. _Write the step here._
+## Other scripts
 
+- `src/sub_extraction/dedupe_srt.py` — removes duplicate rolling auto-caption
+  lines from `.srt` files.
 
-### Troubleshoot _Project Name_
-1. _Write the step here._
-2. _Write the step here._
+## Skills
 
-<table>
-  <tr>
-   <td>
-    Issue
-   </td>
-   <td>
-    Solution
-   </td>
-  </tr>
-  <tr>
-   <td>
-    _Describe the issue here_
-   </td>
-   <td>
-    _Write solution here_
-   </td>
-  </tr>
-  <tr>
-   <td>
-    _Describe the issue here_
-   </td>
-   <td>
-    _Write solution here_
-   </td>
-  </tr>
-  <tr>
-   <td>
-    _Describe the issue here_
-   </td>
-   <td>
-    _Write solution here_
-   </td>
-  </tr>
-</table>
-
-
-Other troubleshooting supports:
-* _Link to FAQs_
-* _Link to runbooks_
-* _Link to other relevant support information_
-
+- `dharma-transcript-correction/` — skill + glossary for correcting
+  Dharma-related transcription errors.
+- `subtitle-cleaning-eval/` — skill for evaluating subtitle-to-text cleaning
+  quality (raw `.srt`/`.vtt` vs. cleaned `.txt`).
 
 ## Contributing guidelines
+
 If you'd like to help out, check out our [contributing guidelines](/CONTRIBUTING.md).
 
-
-## Additional documentation
-_Include links and brief descriptions to additional documentation._
-
-For more information:
-* [Reference link 1](#)
-* [Reference link 2](#)
-* [Reference link 3](#)
-
-
-## How to get help
-* File an issue.
-* Email us at openpecha[at]gmail.com.
-* Join our [discord](https://discord.com/invite/7GFpPFSTeA).
-
-
 ## Terms of use
-_Project Name_ is licensed under the [MIT License](/LICENSE.md).
+
+This project is licensed under the [MIT License](/LICENSE).
